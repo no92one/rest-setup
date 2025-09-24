@@ -1,25 +1,15 @@
 // express - Används för att skapa ett rest-api.
 import express from "express"
-// pg-promise - Används för att kunna koppla upp sig till en PostgreSQL-databas.  
-import pgPromise from "pg-promise"
+// mysql2/promise - Används för att kunna koppla upp sig till en MySQL-databas.  
+import mysql from 'mysql2/promise';
 
-// Databas konfiguration.
-const connection = {
-    host: "localhost",
-    user: "postgres",
-    password: "lösenord",
-    port: 5432,
-    database: "rest-setup"
-} 
-
-// Skapa ett pgPromise-objekt.
-const pg = pgPromise()
-
-// Använder databas konfigurationen och försöker kopplar upp oss till databasen. 
-// "-c search_path=public" - Ser till att vi kör query's mot public-schemat i databasen.
-const database = pg({
-    ...connection,
-  options: "-c search_path=public"
+// Skapa ett mysql-objekt med databas konfiguration.
+const database = await mysql.createConnection({
+    host: 'host',
+    port: "port",
+    user: 'user',
+    password: 'password',
+    database: 'database'
 })
 
 // Skapar ett express-objekt.
@@ -46,7 +36,7 @@ app.get("/endpoint2", async (request, response) => {
 
 // En endpoint som hämtar data från product-tabellen i databasen - gå till http://localhost:3000/products
 app.get("/products", async (request, response) => {
-    const result = await database.any("SELECT * FROM product")
+    const [result] = await database.execute("SELECT * FROM product")
     console.log(result)
     return response.json(result)
 })
@@ -56,7 +46,7 @@ app.post("/products", async (request, response) => {
     const {name, price} = request.body
 
     try {
-        const result = await database.result("INSERT INTO product (name, price) VALUES ($1, $2)",
+        const [result] = await database.execute("INSERT INTO product (name, price) VALUES (?, ?)",
             [name, price])
         
         console.log(result)
