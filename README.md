@@ -6,7 +6,7 @@ Installera alla dependencies:
 npm install
 ```
 
-##Steg 2
+## Steg 2
 Gå in i server.js och fixa till **connection**-variablen, så den innehåller rätt host, port, user, password och databas.
 
 
