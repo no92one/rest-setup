@@ -7,7 +7,7 @@ import pgPromise from "pg-promise"
 const connection = {
     host: "localhost",
     user: "postgres",
-    password: "abc123",
+    password: "lösenord",
     port: 5432,
     database: "rest-setup"
 } 
