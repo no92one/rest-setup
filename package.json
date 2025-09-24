@@ -20,6 +20,7 @@
   "homepage": "https://github.com/no92one/rest-setup#readme",
   "dependencies": {
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "pg-promise": "^12.1.3"
   }
 }

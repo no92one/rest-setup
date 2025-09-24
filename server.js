@@ -2,6 +2,7 @@
 import express from "express"
 // pg-promise - Används för att kunna koppla upp sig till en PostgreSQL-databas.  
 import pgPromise from "pg-promise"
+import session from "express-session"
 
 // Databas konfiguration.
 const connection = {
@@ -29,6 +30,13 @@ const port = 3000
 
 // En middleware som låter oss hantera json-data i våra request.
 app.use(express.json())
+
+//Lägger till session i vårt rest-api. 
+app.use(session({
+    secret: "min-hemlighet",
+    resave: false,
+    saveUninitialized: true
+}))
 
 // Vår root-endpoint - gå till http://localhost:3000
 app.get("/", (request, response) => {
@@ -65,6 +73,86 @@ app.post("/products", async (request, response) => {
         console.log(error)
         return response.status(409).json({message: "Server error."})
     }
+})
+
+// Kollar vår session
+app.get("/check-session", async (request, response) => {
+    console.log(request.session)
+    return response.status(200).json({message: "session is here!"})
+})
+
+// Kollar om någon är inloggad
+app.get("/login", async (request, response) => {
+    if (request.session.user){
+        return response.status(200).json({
+            username: request.session.user.username
+        }) 
+    } else {
+           return response.status(200).json({
+            message: "Ingen är inloggad."
+        })  
+    }
+})
+
+// Logga in
+app.post("/login", async (request, response) => {
+    if(request.session.user){
+        return response.status(404).json({
+            message: "Någon annan är redan inloggad."
+        })
+    } else {
+        const {username, password} = request.body
+        let result = null
+
+        try{
+            result = await database.one("SELECT * FROM anvandare WHERE name = $1 AND password = $2", 
+                [username, password])
+        } catch (e){
+            console.log(e)
+        }
+
+        console.log("result: ", result)
+
+        if(!result){
+            return response.status(404).json({
+                message: "No user found! Wrong username or password."
+            })
+        } else {
+            request.session.user = {
+                id: result.id,
+                username: result.name
+            }
+
+            return response.status(201).json({
+                message: `Välkommen ${request.session.user.username}!`
+            })
+        }
+ 
+    }
+    
+})
+
+// Logga ut 
+app.delete("/login", async (request, response) => {
+    if(!request.session.user) {
+        return response.status(404).json({
+            message: "Ingen är inloggad."
+        })
+    } else {
+        request.session.destroy((err) => {
+            if(err) {
+                console.log(err)
+                return response.status(500).json({
+                    message: "Något blev fel när du skulle logga ut"
+                })
+            } else {
+                return response.status(201).json({
+                    message: "Du har loggat ut."
+                })
+            }
+        })
+    }
+    return response.status(200)
 })
 
 // Startar servern när vi kör server.js-filen.
