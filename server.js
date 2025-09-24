@@ -51,5 +51,21 @@ app.get("/products", async (request, response) => {
     return response.json(result)
 })
 
+// En endpoint lägger till en ny produkt i product-tabellen - I Postman, POST - http://localhost:3000/products
+app.post("/products", async (request, response) => {
+    const {name, price} = request.body
+
+    try {
+        const result = await database.result("INSERT INTO product (name, price) VALUES ($1, $2)",
+            [name, price])
+        
+        console.log(result)
+        return response.status(201).json(result)
+    } catch (error) {
+        console.log(error)
+        return response.status(409).json({message: "Server error."})
+    }
+})
+
 // Startar servern när vi kör server.js-filen.
 app.listen(port, () => { console.log(`http://localhost:${port}`)})
