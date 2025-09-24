@@ -1,12 +1,12 @@
 # rest-setup
 
-##Steg 1
+## Steg 1
 Installera alla dependencies:
 ```bash
 npm install
 ```
 
-##Steg 2
+## Steg 2
 Gå in i server.js och fixa till **connection**-variablen, så den innehåller rätt host, port, user, password och databas.
 
 Ändra även i **database**-variblen's **search_path**, så att den navigerar till rätt schema i databasen. Den är satt till **public**-schemat.
@@ -17,7 +17,7 @@ Gå in i server.js och fixa till **connection**-variablen, så den innehåller r
 
 
 
-##Steg 3
+## Steg 3
 Starta servern:
 ```bash
 node server.js
