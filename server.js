@@ -3,12 +3,19 @@ import express from "express"
 // pg-promise - Används för att kunna koppla upp sig till en PostgreSQL-databas.  
 import pgPromise from "pg-promise"
 import session from "express-session"
+import crypto from "crypto"
+
+// Krypterings funktion
+function hash(word) {
+    const salt = "mitt-salt"
+    return crypto.pbkdf2Sync(word, salt, 1000, 64, `sha512`).toString(`hex`)
+}
 
 // Databas konfiguration.
 const connection = {
     host: "localhost",
     user: "postgres",
-    password: "lösenord",
+    password: "abc123",
     port: 5432,
     database: "rest-setup"
 } 
@@ -106,7 +113,7 @@ app.post("/login", async (request, response) => {
 
         try{
             result = await database.one("SELECT * FROM anvandare WHERE name = $1 AND password = $2", 
-                [username, password])
+                [username, hash(password)])
         } catch (e){
             console.log(e)
         }
@@ -153,6 +160,23 @@ app.delete("/login", async (request, response) => {
         })
     }
     return response.status(200)
+})
+
+// Lägg till en ny användare
+app.post("/users", async (request, response) => {
+    console.log("Trying to create user")
+    const {username, password} = request.body
+
+    try {
+        const result = await database.result("INSERT INTO anvandare (name, password) VALUES ($1, $2)",
+            [username, hash(password)])
+        
+        console.log(result)
+        return response.status(201).json(result)
+    } catch (error) {
+        console.log(error)
+        return response.status(409).json({message: "Server error."})
+    }
 })
 
 // Startar servern när vi kör server.js-filen.
