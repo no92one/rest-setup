@@ -3,6 +3,13 @@ import express from "express"
 // mysql2/promise - Används för att kunna koppla upp sig till en MySQL-databas.  
 import mysql from 'mysql2/promise';
 import session from "express-session"
+import crypto from "crypto"
+
+// Krypterings funktion
+function hash(word) {
+    const salt = "mitt-salt"
+    return crypto.pbkdf2Sync(word, salt, 1000, 64, `sha512`).toString(`hex`)
+}
 
 // Skapa ett mysql-objekt med databas konfiguration.
 const database = await mysql.createConnection({
@@ -96,7 +103,7 @@ app.post("/login", async (request, response) => {
 
         try{
             [result] = await database.execute("SELECT * FROM user WHERE name = ? AND password = ?", 
-                [username, password])
+                [username, hash(password)])
         } catch (e){
             console.log(e)
         }
@@ -143,6 +150,23 @@ app.delete("/login", async (request, response) => {
         })
     }
     return response.status(200)
+})
+
+// Lägg till en ny användare
+app.post("/users", async (request, response) => {
+    console.log("Trying to create user")
+    const {username, password} = request.body
+
+    try {
+        const [result] = await database.execute("INSERT INTO user (name, password) VALUES (?, ?)",
+            [username, hash(password)])
+        
+        console.log(result)
+        return response.status(201).json(result)
+    } catch (error) {
+        console.log(error)
+        return response.status(409).json({message: "Server error."})
+    }
 })
 
 // Startar servern när vi kör server.js-filen.
