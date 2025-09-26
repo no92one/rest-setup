@@ -62,6 +62,19 @@
         ]
     },
     {
+        "route": "/users",
+        "roles": [
+            {
+                "types": ["*"], 
+                "methods": ["POST"]
+            },
+            {
+                "types": ["admin", "superadmin"],
+                "methods": ["GET"]
+            }
+        ]
+    },
+    {
         "route": "/test-anonymous",
         "roles": [
             {
