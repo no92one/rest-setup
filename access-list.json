@@ -1,0 +1,109 @@
+[
+    {
+        "route": "",
+        "roles": [
+            {
+                "types": ["*"], 
+                "methods": ["GET"]
+            }
+        ]
+    },
+    {
+        "route": "/endpoint2",
+        "roles": [
+            {
+                "types": ["*"], 
+                "methods": ["GET"]
+            }
+        ]
+    },
+    {
+        "route": "/check-session",
+        "roles": [
+            {
+                "types": ["*"], 
+                "methods": ["GET"]
+            }
+        ]
+    },
+    {
+        "route": "/products",
+        "roles": [
+            {
+                "types": ["*"], 
+                "methods": ["GET"]
+            },
+            {
+                "types": ["admin"], 
+                "methods": ["GET", "POST"]
+            }
+        ]
+    },
+    {
+        "route": "/login",
+        "roles": [
+            {
+                "types": ["anonymous"], 
+                "methods": ["POST"]
+            },
+            {
+                "types": ["user", "admin", "superadmin"], 
+                "methods": ["GET", "DELETE"]
+            }    
+        ]
+    },
+    {
+        "route": "/users",
+        "roles": [
+            {
+                "types": ["admin", "superadmin"], 
+                "methods": ["POST"]
+            }
+        ]
+    },
+    {
+        "route": "/test-anonymous",
+        "roles": [
+            {
+                "types": ["*"], 
+                "methods": ["GET"]
+            }
+        ]
+    },
+    {
+        "route": "/test-user",
+        "roles": [
+            {
+                "types": ["user", "admin", "superadmin"], 
+                "methods": ["GET"]
+            }
+        ]
+    },
+    {
+        "route": "/test-admin",
+        "roles": [
+            {
+                "types": ["admin", "superadmin"], 
+                "methods": ["GET"]
+            }
+        ]
+    },
+    {
+        "route": "/test-superadmin",
+        "roles": [
+            {
+                "types": ["superadmin"], 
+                "methods": ["GET"]
+            }
+        ]
+    },
+    {
+        "route": "/test-acl/:id",
+        "roles": [
+            {
+                "types": ["admin", "superadmin"], 
+                "methods": ["GET"]
+            }
+        ]
+    }
+]

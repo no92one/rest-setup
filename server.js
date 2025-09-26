@@ -4,6 +4,9 @@ import express from "express"
 import mysql from 'mysql2/promise';
 import session from "express-session"
 import crypto from "crypto"
+// Hämtar in vår acl - Lägg till den efter path och innan (request, response) 
+// i den endpoint du vill använda den i.
+import acl from "./acl.js";
 
 // Krypterings funktion
 function hash(word) {
@@ -35,14 +38,17 @@ app.use(session({
     saveUninitialized: true
 }))
 
+// Lägger till vår acl-middleware
+//app.use(acl)
+
 // Vår root-endpoint - gå till http://localhost:3000
-app.get("/", (request, response) => {
+app.get("/", acl, (request, response) => {
     console.log("Du är på servern.")
     response.json({message: "Du kan prata med servern."})
 })
 
 // En annan endpoint - gå till http://localhost:3000/endpoint2
-app.get("/endpoint2", async (request, response) => {
+app.get("/endpoint2", acl, async (request, response) => {
     console.log("Jag är endpoint2.")
     response.json({
         message: "Du kom åt endpoint2."
@@ -50,14 +56,14 @@ app.get("/endpoint2", async (request, response) => {
 })
 
 // En endpoint som hämtar data från product-tabellen i databasen - gå till http://localhost:3000/products
-app.get("/products", async (request, response) => {
+app.get("/products", acl, async (request, response) => {
     const [result] = await database.execute("SELECT * FROM product")
     console.log(result)
     return response.json(result)
 })
 
 // En endpoint lägger till en ny produkt i product-tabellen - I Postman, POST - http://localhost:3000/products
-app.post("/products", async (request, response) => {
+app.post("/products", acl, async (request, response) => {
     const {name, price} = request.body
 
     try {
@@ -73,13 +79,13 @@ app.post("/products", async (request, response) => {
 })
 
 // Kollar vår session
-app.get("/check-session", async (request, response) => {
+app.get("/check-session", acl, async (request, response) => {
     console.log(request.session)
     return response.status(200).json({message: "session is here!"})
 })
 
 // Kollar om någon är inloggad
-app.get("/login", async (request, response) => {
+app.get("/login", acl, async (request, response) => {
     if (request.session.user){
         return response.status(200).json({
             username: request.session.user.username
@@ -92,7 +98,7 @@ app.get("/login", async (request, response) => {
 })
 
 // Logga in
-app.post("/login", async (request, response) => {
+app.post("/login", acl, async (request, response) => {
     if(request.session.user){
         return response.status(404).json({
             message: "Någon annan är redan inloggad."
@@ -115,9 +121,11 @@ app.post("/login", async (request, response) => {
                 message: "No user found! Wrong username or password."
             })
         } else {
+            console.log(result)
             request.session.user = {
                 id: result[0].id,
-                username: result[0].name
+                username: result[0].name,
+                role: result[0].role
             }
 
             return response.status(201).json({
@@ -130,7 +138,7 @@ app.post("/login", async (request, response) => {
 })
 
 // Logga ut 
-app.delete("/login", async (request, response) => {
+app.delete("/login", acl, async (request, response) => {
     if(!request.session.user) {
         return response.status(404).json({
             message: "Ingen är inloggad."
@@ -153,12 +161,12 @@ app.delete("/login", async (request, response) => {
 })
 
 // Lägg till en ny användare
-app.post("/users", async (request, response) => {
+app.post("/users", acl, async (request, response) => {
     console.log("Trying to create user")
     const {username, password} = request.body
 
     try {
-        const [result] = await database.execute("INSERT INTO user (name, password) VALUES (?, ?)",
+        const [result] = await database.execute("INSERT INTO user (name, password, role) VALUES (?, ?, 'user')",
             [username, hash(password)])
         
         console.log(result)
@@ -167,6 +175,31 @@ app.post("/users", async (request, response) => {
         console.log(error)
         return response.status(409).json({message: "Server error."})
     }
+})
+
+// Testa vår acl med att hantera params.
+app.get("/test-acl/:id", acl, (request, response) => {
+    response.status(200).json({message: `Du är inloggad med rolen: ${request.session.user.role}.`})
+})
+
+// Testa vår acl som anonymous
+app.get("/test-anonymous", acl, (request, response) => {
+    response.status(200).json({message: `Du har rolen anonymous.`})
+})
+
+// Testa vår acl som user
+app.get("/test-user", acl, (request, response) => {
+    response.status(200).json({message: `Du är inloggad med rolen: ${request.session.user.role}.`})
+})
+
+// Testa vår acl som admin
+app.get("/test-admin", acl, (request, response) => {
+    response.status(200).json({message: `Du är inloggad med rolen: ${request.session.user.role}.`})
+})
+
+// Testa vår acl som superadmin
+app.get("/test-superadmin", acl, (request, response) => {
+    response.status(200).json({message: `Du är inloggad med rolen: ${request.session.user.role}.`})
 })
 
 // Startar servern när vi kör server.js-filen.
